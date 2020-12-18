@@ -4,101 +4,131 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
-import android.os.CountDownTimer;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-import android.view.View;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class GameScreen extends View {
+public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 
-  Timer timer;
-  private float birdX = 0;
-  private float birdY = 0;
-  private float goalX = 0;
-  private float goalY = 0;
+
+  DrawingThread drawingThread;
 
   public GameScreen(Context context) {
 	super(context);
-	timer = new Timer();
-	timer.start();
+	getHolder().addCallback(this);
   }
 
   public GameScreen(Context context, @Nullable AttributeSet attrs) {
 	super(context, attrs);
-	timer = new Timer();
-	timer.start();
+	getHolder().addCallback(this);
   }
 
   public GameScreen(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
 	super(context, attrs, defStyleAttr);
-	timer = new Timer();
-	timer.start();
+	getHolder().addCallback(this);
   }
 
-  public GameScreen(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-	super(context, attrs, defStyleAttr, defStyleRes);
-	timer = new Timer();
-	timer.start();
+  private void setupThread(Context context) {
+	drawingThread = new DrawingThread();
+	drawingThread.setSurfaceHolder(getHolder());
+	drawingThread.setContext(context);
+	drawingThread.start();
+  }
+
+
+  @Override
+  public void surfaceCreated(@NonNull SurfaceHolder holder) {
+	setupThread(getContext());
   }
 
   @Override
-  protected void onDraw(Canvas canvas) {
-	super.onDraw(canvas);
+  public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
 
-	Bitmap bird = BitmapFactory.decodeResource(getResources(), R.drawable.bird);
+  }
 
-	canvas.drawBitmap(bird, birdX, birdY, new Paint());
-
-	if (birdX < goalX) {
-	  birdX += 10;
-	} else if (birdX > goalX) {
-	  birdX -= 10;
-	}
-	if (Math.abs(birdX - goalX) < 10) {
-	  birdX = goalX;
-	}
-
-	if (birdY < goalY) {
-	  birdY += 10;
-	} else if (birdY > goalY) {
-	  birdY -= 10;
-	}
-	if (Math.abs(birdY - goalY) < 10) {
-	  birdY = goalY;
-	}
-
+  @Override
+  public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
 
   }
 
   @Override
   public boolean onTouchEvent(MotionEvent event) {
 	if (event.getAction() == MotionEvent.ACTION_DOWN) {
-	  goalX = event.getX();
-	  goalY = event.getY();
+	  drawingThread.setGoal(event.getX(), event.getY());
 	}
-
 	return super.onTouchEvent(event);
   }
+}
 
-  class Timer extends CountDownTimer {
+class DrawingThread extends Thread {
 
-	public Timer() {
-	  super(Integer.MAX_VALUE, 1000 / 60);
-	}
+  private float birdX = 0;
+  private float birdY = 0;
 
-	@Override
-	public void onTick(long millisUntilFinished) {
-	  GameScreen.this.invalidate();
-	}
+  private float goalX = 0;
+  private float goalY = 0;
 
-	@Override
-	public void onFinish() {
+  private boolean running = true;
+  private SurfaceHolder surfaceHolder;
+  private Context context;
 
-	}
+  public void setGoal(float goalX, float goalY) {
+	this.goalX = goalX;
+	this.goalY = goalY;
   }
 
+  public void setContext(Context context) {
+	this.context = context;
+  }
 
+  public void setSurfaceHolder(SurfaceHolder surfaceHolder) {
+	this.surfaceHolder = surfaceHolder;
+  }
+
+  public void stopDrawing() {
+	running = false;
+  }
+
+  @Override
+  public void run() {
+
+	while (running) {
+	  Canvas canvas = surfaceHolder.lockCanvas();
+
+	  if (canvas != null) {
+
+	    canvas.drawColor(Color.WHITE);
+
+		Bitmap bird = BitmapFactory.decodeResource(context.getResources(), R.drawable.bird);
+
+		canvas.drawBitmap(bird, birdX, birdY, new Paint());
+
+		if (birdX < goalX) {
+		  birdX += 10;
+		} else if (birdX > goalX) {
+		  birdX -= 10;
+		}
+		if (Math.abs(birdX - goalX) < 10) {
+		  birdX = goalX;
+		}
+
+		if (birdY < goalY) {
+		  birdY += 10;
+		} else if (birdY > goalY) {
+		  birdY -= 10;
+		}
+		if (Math.abs(birdY - goalY) < 10) {
+		  birdY = goalY;
+		}
+
+		surfaceHolder.unlockCanvasAndPost(canvas);
+	  }
+	}
+  }
 }
