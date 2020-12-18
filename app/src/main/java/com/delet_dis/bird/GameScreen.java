@@ -107,7 +107,7 @@ class DrawingThread extends Thread {
 
 		Bitmap bird = BitmapFactory.decodeResource(context.getResources(), R.drawable.bird);
 
-		canvas.drawBitmap(bird, birdX, birdY, new Paint());
+		canvas.drawBitmap(bird, birdX-(float)bird.getWidth()/2, birdY-(float)bird.getHeight()/2, new Paint());
 
 		if (birdX < goalX) {
 		  birdX += 10;
