@@ -95,6 +95,7 @@ class DrawingThread extends Thread {
 	running = false;
   }
 
+  Mario mario = new Mario();
   @Override
   public void run() {
 
@@ -105,9 +106,7 @@ class DrawingThread extends Thread {
 
 	    canvas.drawColor(Color.WHITE);
 
-		Bitmap bird = BitmapFactory.decodeResource(context.getResources(), R.drawable.bird);
-
-		canvas.drawBitmap(bird, birdX-(float)bird.getWidth()/2, birdY-(float)bird.getHeight()/2, new Paint());
+		canvas.drawBitmap(mario.getNextMario(context), birdX, birdY, new Paint());
 
 		if (birdX < goalX) {
 		  birdX += 10;
