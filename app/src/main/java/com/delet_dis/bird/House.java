@@ -20,11 +20,10 @@ public class House extends View {
 	Paint paint = new Paint();
 	paint.setAntiAlias(true);
 
-	paint.setColor(Color.DKGRAY);
-
 	float sizeCoeff = getWidth() * 0.02f;
 	float leftTopPadding = getWidth() * 0.2f;
 
+	paint.setColor(Color.DKGRAY);
 	canvas.drawRect(leftTopPadding, leftTopPadding, 30 * sizeCoeff, 30 * sizeCoeff, paint);
 
 	Path path = new Path();
@@ -42,19 +41,37 @@ public class House extends View {
 
 
 	paint.setStyle(Paint.Style.FILL_AND_STROKE);
-	paint.setColor(Color.BLUE);
+	paint.setColor(Color.WHITE);
 	canvas.drawRect(leftTopPadding * 1.1f, leftTopPadding * 1.2f, leftTopPadding + 10 * sizeCoeff, leftTopPadding + 13 * sizeCoeff, paint);
 
 	path.reset();
 
-	for (int i = 1; i < 13; i += 2) {
+	for (int i = 2; i < 12; i += 2) {
 	  path.moveTo(leftTopPadding * 1.1f + 0 * sizeCoeff, leftTopPadding * 1.2f + i * sizeCoeff);
 	  path.lineTo(leftTopPadding * 1.1f + 9 * sizeCoeff, leftTopPadding * 1.2f + i * sizeCoeff);
 	}
 
-//	for(int i = 0; i<)
-
+	for (int i = 2; i < 12; i += 2) {
+	  path.moveTo(leftTopPadding * 1f + i * sizeCoeff, leftTopPadding * 1.2f + 0 * sizeCoeff);
+	  path.lineTo(leftTopPadding * 1f + i * sizeCoeff, leftTopPadding * 1.4f + 9 * sizeCoeff);
+	}
 	paint.setColor(Color.BLACK);
 	canvas.drawPath(path, paint);
+
+	canvas.drawRect(leftTopPadding * 2.1f, leftTopPadding * 1.2f, 29 * sizeCoeff, 30 * sizeCoeff, paint);
+
+	path.reset();
+	for (int i = 0; i < 18; i += 2) {
+	  path.moveTo(leftTopPadding * 2.1f, leftTopPadding * 1.2f + i * 22);
+	  path.lineTo(29 * sizeCoeff - i * 10, 30 * sizeCoeff);
+	}
+
+	for (int i = 0; i > -18; i -= 2) {
+	  path.moveTo(29 * sizeCoeff, 30 * sizeCoeff + i * 22);
+	  path.lineTo(leftTopPadding * 2.1f - i * 10, leftTopPadding * 1.2f);
+	}
+	paint.setColor(Color.WHITE);
+	canvas.drawPath(path, paint);
+
   }
 }

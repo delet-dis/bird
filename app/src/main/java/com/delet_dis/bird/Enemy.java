@@ -15,25 +15,25 @@ public class Enemy {
 	  case 0:
 		enemy = BitmapFactory.decodeResource(context.getResources(), R.drawable.enemy_1);
 		break;
-	  case 1:
+	  case 2:
 		enemy = BitmapFactory.decodeResource(context.getResources(), R.drawable.enemy_2);
 		break;
-	  case 2:
+	  case 4:
 		enemy = BitmapFactory.decodeResource(context.getResources(), R.drawable.enemy_3);
 		break;
-	  case 3:
+	  case 6:
 		enemy = BitmapFactory.decodeResource(context.getResources(), R.drawable.enemy_4);
 		break;
-	  case 4:
+	  case 8:
 		enemy = BitmapFactory.decodeResource(context.getResources(), R.drawable.enemy_5);
 		break;
-	  case 5:
+	  case 10:
 		enemy = BitmapFactory.decodeResource(context.getResources(), R.drawable.enemy_6);
 		break;
-	  case 6:
+	  case 12:
 		enemy = BitmapFactory.decodeResource(context.getResources(), R.drawable.enemy_7);
 		break;
-	  case 7:
+	  case 14:
 		enemy = BitmapFactory.decodeResource(context.getResources(), R.drawable.enemy_8);
 		break;
 	}
@@ -42,7 +42,7 @@ public class Enemy {
 
 	currentEnemyNumber++;
 
-	if (currentEnemyNumber > 2) {
+	if (currentEnemyNumber > 14) {
 	  currentEnemyNumber = 0;
 	}
 

@@ -1,11 +1,10 @@
 package com.delet_dis.bird;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -15,7 +14,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
-
 
   DrawingThread drawingThread;
 
@@ -34,7 +32,7 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 	getHolder().addCallback(this);
   }
 
-  private void setupThread(Context context) {
+  public void setupThread(Context context) {
 	drawingThread = new DrawingThread();
 	drawingThread.setSurfaceHolder(getHolder());
 	drawingThread.setContext(context);
@@ -64,16 +62,26 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 	}
 	return super.onTouchEvent(event);
   }
+
+
+  public void setGameEventListener(DrawingThread.GameEventListener listener) {
+	drawingThread.gameEventListener = listener;
+  }
+
 }
 
 class DrawingThread extends Thread {
 
-  private float birdX = 0;
-  private float birdY = 0;
 
+  Mario mario = new Mario();
+  Enemy enemy = new Enemy();
+  DrawingThread.GameEventListener gameEventListener;
+  private float marioX = 0;
+  private float marioY = 0;
   private float goalX = 0;
   private float goalY = 0;
-
+  private float enemyX = 700;
+  private float enemyY = 700;
   private boolean running = true;
   private SurfaceHolder surfaceHolder;
   private Context context;
@@ -82,6 +90,8 @@ class DrawingThread extends Thread {
 	this.goalX = goalX;
 	this.goalY = goalY;
   }
+
+//  GameScreen.GameEventListener;
 
   public void setContext(Context context) {
 	this.context = context;
@@ -95,7 +105,14 @@ class DrawingThread extends Thread {
 	running = false;
   }
 
-  Mario mario = new Mario();
+  public Rect getRectForMario() {
+	return new Rect((int) marioX, (int) marioY, (int) marioX + 150, (int) marioY + 150);
+  }
+
+  public Rect getRectForEnemy() {
+	return new Rect((int) enemyX, (int) enemyY, (int) enemyX + 150, (int) enemyY + 150);
+  }
+
   @Override
   public void run() {
 
@@ -104,30 +121,60 @@ class DrawingThread extends Thread {
 
 	  if (canvas != null) {
 
-	    canvas.drawColor(Color.WHITE);
+		canvas.drawColor(Color.WHITE);
 
-		canvas.drawBitmap(mario.getNextMario(context), birdX, birdY, new Paint());
+		canvas.drawBitmap(mario.getNextMario(context), marioX, marioY, new Paint());
 
-		if (birdX < goalX) {
-		  birdX += 10;
-		} else if (birdX > goalX) {
-		  birdX -= 10;
-		}
-		if (Math.abs(birdX - goalX) < 10) {
-		  birdX = goalX;
-		}
+		canvas.drawBitmap(enemy.getNextEnemy(context), enemyX, enemyY, new Paint());
 
-		if (birdY < goalY) {
-		  birdY += 10;
-		} else if (birdY > goalY) {
-		  birdY -= 10;
+		if (marioX < goalX) {
+		  marioX += Consts.marioSpeed;
+		} else if (marioX > goalX) {
+		  marioX -= Consts.marioSpeed;
 		}
-		if (Math.abs(birdY - goalY) < 10) {
-		  birdY = goalY;
+		if (Math.abs(marioX - goalX) < Consts.marioSpeed) {
+		  marioX = goalX;
 		}
 
+		if (marioY < goalY) {
+		  marioY += Consts.marioSpeed;
+		} else if (marioY > goalY) {
+		  marioY -= Consts.marioSpeed;
+		}
+		if (Math.abs(marioY - goalY) < Consts.marioSpeed) {
+		  marioY = goalY;
+		}
+
+		if (enemyX < marioX) {
+		  enemyX += Consts.enemySpeed;
+		} else if (marioX < enemyX) {
+		  enemyX -= Consts.enemySpeed;
+		}
+		if (Math.abs(marioX - enemyX) < Consts.enemySpeed) {
+		  marioX = enemyX;
+		}
+
+		if (enemyY < marioY) {
+		  enemyY += Consts.enemySpeed;
+		} else if (marioY < enemyY) {
+		  enemyY -= Consts.enemySpeed;
+		}
+		if (Math.abs(marioY - enemyY) < Consts.enemySpeed) {
+		  marioY = enemyY;
+		}
+
+		if (getRectForMario().intersect(getRectForEnemy())) {
+		  running = false;
+		  gameEventListener.gameStopped();
+		}
 		surfaceHolder.unlockCanvasAndPost(canvas);
 	  }
 	}
+  }
+
+  interface GameEventListener {
+	void gameStarted();
+
+	void gameStopped();
   }
 }
