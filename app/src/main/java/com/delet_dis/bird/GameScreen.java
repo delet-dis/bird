@@ -5,7 +5,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.CountDownTimer;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -13,14 +15,17 @@ import android.view.SurfaceView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+
 public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 
   DrawingThread drawingThread;
+  DrawingThread.GameEventListener listener;
 
   public GameScreen(Context context) {
 	super(context);
 	getHolder().addCallback(this);
   }
+
 
   public GameScreen(Context context, @Nullable AttributeSet attrs) {
 	super(context, attrs);
@@ -32,11 +37,16 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 	getHolder().addCallback(this);
   }
 
+  public void setListener(DrawingThread.GameEventListener listener) {
+	this.listener = listener;
+  }
+
   public void setupThread(Context context) {
 	drawingThread = new DrawingThread();
 	drawingThread.setSurfaceHolder(getHolder());
 	drawingThread.setContext(context);
 	drawingThread.start();
+	drawingThread.gameEventListener = listener;
   }
 
 
@@ -57,31 +67,45 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 
   @Override
   public boolean onTouchEvent(MotionEvent event) {
+    Log.d("SENDING_SOMETHING", "bzz bzz");
 	if (event.getAction() == MotionEvent.ACTION_DOWN) {
 	  drawingThread.setGoal(event.getX(), event.getY());
 	}
-	return super.onTouchEvent(event);
+	performClick();
+	return true;
   }
 
+  @Override
+  public boolean performClick() {
+	return super.performClick();
+  }
 
   public void setGameEventListener(DrawingThread.GameEventListener listener) {
 	drawingThread.gameEventListener = listener;
   }
 
+
 }
 
 class DrawingThread extends Thread {
 
-
-  Mario mario = new Mario();
-  Enemy enemy = new Enemy();
+  private final Timer timer = new Timer();
+  SpritesCreatorHelper.Mario mario = new SpritesCreatorHelper.Mario();
+  SpritesCreatorHelper.Enemy enemy = new SpritesCreatorHelper.Enemy();
+  SpritesCreatorHelper.Bonus bonus = new SpritesCreatorHelper.Bonus();
   DrawingThread.GameEventListener gameEventListener;
+  int marioSpeedLocal = GameConsts.marioSpeed;
+  int enemySpeedLocal = GameConsts.enemySpeed;
+  int levelChangeTimeLocal = GameConsts.levelChangeTime;
+  int gameScore = 0;
+  private float bonusX;
+  private float bonusY;
   private float marioX = 0;
   private float marioY = 0;
   private float goalX = 0;
   private float goalY = 0;
-  private float enemyX = 700;
-  private float enemyY = 700;
+  private float enemyX = generateRandomEnemyStartCoordinates();
+  private float enemyY = generateRandomEnemyStartCoordinates();
   private boolean running = true;
   private SurfaceHolder surfaceHolder;
   private Context context;
@@ -91,7 +115,9 @@ class DrawingThread extends Thread {
 	this.goalY = goalY;
   }
 
-//  GameScreen.GameEventListener;
+  private int generateRandomEnemyStartCoordinates() {
+	return (int) ((Math.random() * (800 - 150)) + 150);
+  }
 
   public void setContext(Context context) {
 	this.context = context;
@@ -103,18 +129,27 @@ class DrawingThread extends Thread {
 
   public void stopDrawing() {
 	running = false;
+	gameEventListener.gameStopped();
   }
 
   public Rect getRectForMario() {
-	return new Rect((int) marioX, (int) marioY, (int) marioX + 150, (int) marioY + 150);
+	return new Rect((int) marioX + 35, (int) marioY + 20, (int) marioX + 115, (int) marioY + 170);
   }
 
   public Rect getRectForEnemy() {
 	return new Rect((int) enemyX, (int) enemyY, (int) enemyX + 150, (int) enemyY + 150);
   }
 
+//  public Rect getRectForBonus() {
+//
+//	return new Rect(( int ))
+//  }
+
+
   @Override
   public void run() {
+
+	timer.start();
 
 	while (running) {
 	  Canvas canvas = surfaceHolder.lockCanvas();
@@ -127,45 +162,46 @@ class DrawingThread extends Thread {
 
 		canvas.drawBitmap(enemy.getNextEnemy(context), enemyX, enemyY, new Paint());
 
+//		canvas.drawBitmap(bonus.getBonusBitmap(context), 900, 900, new Paint());
+
 		if (marioX < goalX) {
-		  marioX += Consts.marioSpeed;
+		  marioX += GameConsts.marioSpeed;
 		} else if (marioX > goalX) {
-		  marioX -= Consts.marioSpeed;
+		  marioX -= GameConsts.marioSpeed;
 		}
-		if (Math.abs(marioX - goalX) < Consts.marioSpeed) {
+		if (Math.abs(marioX - goalX) < GameConsts.marioSpeed) {
 		  marioX = goalX;
 		}
 
 		if (marioY < goalY) {
-		  marioY += Consts.marioSpeed;
+		  marioY += GameConsts.marioSpeed;
 		} else if (marioY > goalY) {
-		  marioY -= Consts.marioSpeed;
+		  marioY -= GameConsts.marioSpeed;
 		}
-		if (Math.abs(marioY - goalY) < Consts.marioSpeed) {
+		if (Math.abs(marioY - goalY) < GameConsts.marioSpeed) {
 		  marioY = goalY;
 		}
 
 		if (enemyX < marioX) {
-		  enemyX += Consts.enemySpeed;
+		  enemyX += GameConsts.enemySpeed;
 		} else if (marioX < enemyX) {
-		  enemyX -= Consts.enemySpeed;
+		  enemyX -= GameConsts.enemySpeed;
 		}
-		if (Math.abs(marioX - enemyX) < Consts.enemySpeed) {
+		if (Math.abs(marioX - enemyX) < GameConsts.enemySpeed) {
 		  marioX = enemyX;
 		}
 
 		if (enemyY < marioY) {
-		  enemyY += Consts.enemySpeed;
+		  enemyY += GameConsts.enemySpeed;
 		} else if (marioY < enemyY) {
-		  enemyY -= Consts.enemySpeed;
+		  enemyY -= GameConsts.enemySpeed;
 		}
-		if (Math.abs(marioY - enemyY) < Consts.enemySpeed) {
+		if (Math.abs(marioY - enemyY) < GameConsts.enemySpeed) {
 		  marioY = enemyY;
 		}
 
 		if (getRectForMario().intersect(getRectForEnemy())) {
-		  running = false;
-		  gameEventListener.gameStopped();
+		  stopDrawing();
 		}
 		surfaceHolder.unlockCanvasAndPost(canvas);
 	  }
@@ -173,8 +209,32 @@ class DrawingThread extends Thread {
   }
 
   interface GameEventListener {
-	void gameStarted();
-
 	void gameStopped();
+
+	void scoreChanged(int score);
+  }
+
+  class Timer extends CountDownTimer {
+
+	public Timer() {
+	  super(Integer.MAX_VALUE, levelChangeTimeLocal / 10);
+	}
+
+	@Override
+	public void onTick(long millisUntilFinished) {
+	  levelChangeTimeLocal -= 1;
+	  marioSpeedLocal += 1;
+	  enemySpeedLocal += 2;
+
+//	  gameEventListener.scoreChanged(gameScore += 100);
+	}
+
+	@Override
+	public void onFinish() {
+
+	}
   }
 }
+
+
+

@@ -12,6 +12,7 @@ public class MainActivity extends AppCompatActivity {
   Button restartButton;
   TextView gameOverText;
   GameScreen gameScreen;
+  TextView gameScore;
 
 
   @Override
@@ -22,26 +23,29 @@ public class MainActivity extends AppCompatActivity {
 
 	setContentView(R.layout.activity_main);
 
-	restartButton = findViewById(R.id.button);
+	restartButton = findViewById(R.id.restartButton);
 	gameOverText = findViewById(R.id.gameOverText);
 
 	gameScreen = findViewById(R.id.gameScreen);
 
+	gameScore = findViewById(R.id.gameScore);
 
-	gameScreen.setGameEventListener(new DrawingThread.GameEventListener() {
-	  @Override
-	  public void gameStarted() {
-		restartButton.setVisibility(View.INVISIBLE);
-		gameOverText.setVisibility(View.INVISIBLE);
-	  }
+	gameScreen.setListener(new DrawingThread.GameEventListener() {
 
 	  @Override
 	  public void gameStopped() {
-		restartButton.setVisibility(View.VISIBLE);
-		restartButton.setOnClickListener(v -> {
-
+		runOnUiThread(() -> {
+		  restartButton.setVisibility(View.VISIBLE);
+		  restartButton.setOnClickListener(v -> {
+//		  gameScreen.
+		  });
+		  gameOverText.setVisibility(View.VISIBLE);
 		});
-		gameOverText.setVisibility(View.VISIBLE);
+	  }
+
+	  @Override
+	  public void scoreChanged(int score) {
+		runOnUiThread(() -> gameScore.setText(score));
 	  }
 	});
 

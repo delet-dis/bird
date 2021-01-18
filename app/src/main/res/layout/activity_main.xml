@@ -16,7 +16,17 @@
           app:layout_constraintEnd_toEndOf="parent" />
 
   <TextView
-          android:text="Game over"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:id="@+id/gameScore"
+          app:layout_constraintEnd_toEndOf="parent"
+          app:layout_constraintTop_toTopOf="parent"
+          android:layout_marginTop="16dp"
+          android:layout_marginEnd="16dp"
+          android:visibility="gone" />
+
+  <TextView
+          android:text="@string/gameOverText"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:id="@+id/gameOverText"
@@ -25,16 +35,16 @@
           app:layout_constraintEnd_toEndOf="@+id/gameScreen"
           app:layout_constraintBottom_toBottomOf="@+id/gameScreen"
           android:textSize="24sp"
-          android:visibility="invisible" />
+          android:visibility="gone" />
 
   <Button
-          android:text="Restart game"
+          android:text="@string/restartGameText"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:id="@+id/button"
+          android:id="@+id/restartButton"
           app:layout_constraintStart_toStartOf="parent"
           app:layout_constraintEnd_toEndOf="parent"
           app:layout_constraintBottom_toBottomOf="parent"
           android:layout_marginBottom="20dp"
-          android:visibility="invisible" />
+          android:visibility="gone" />
 </androidx.constraintlayout.widget.ConstraintLayout>
