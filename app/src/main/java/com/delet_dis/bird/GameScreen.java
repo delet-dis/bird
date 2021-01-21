@@ -67,13 +67,14 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 
   @Override
   public boolean onTouchEvent(MotionEvent event) {
-    Log.d("SENDING_SOMETHING", "bzz bzz");
+	Log.d("SENDING_SOMETHING", "bzz bzz");
 	if (event.getAction() == MotionEvent.ACTION_DOWN) {
 	  drawingThread.setGoal(event.getX(), event.getY());
 	}
 	performClick();
 	return true;
   }
+
 
   @Override
   public boolean performClick() {
@@ -89,7 +90,7 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 
 class DrawingThread extends Thread {
 
-  private final Timer timer = new Timer();
+//  private final Timer timer = new Timer();
   SpritesCreatorHelper.Mario mario = new SpritesCreatorHelper.Mario();
   SpritesCreatorHelper.Enemy enemy = new SpritesCreatorHelper.Enemy();
   SpritesCreatorHelper.Bonus bonus = new SpritesCreatorHelper.Bonus();
@@ -149,7 +150,7 @@ class DrawingThread extends Thread {
   @Override
   public void run() {
 
-	timer.start();
+//	timer.start();
 
 	while (running) {
 	  Canvas canvas = surfaceHolder.lockCanvas();
@@ -214,26 +215,26 @@ class DrawingThread extends Thread {
 	void scoreChanged(int score);
   }
 
-  class Timer extends CountDownTimer {
-
-	public Timer() {
-	  super(Integer.MAX_VALUE, levelChangeTimeLocal / 10);
-	}
-
-	@Override
-	public void onTick(long millisUntilFinished) {
-	  levelChangeTimeLocal -= 1;
-	  marioSpeedLocal += 1;
-	  enemySpeedLocal += 2;
-
-//	  gameEventListener.scoreChanged(gameScore += 100);
-	}
-
-	@Override
-	public void onFinish() {
-
-	}
-  }
+//  class Timer extends CountDownTimer {
+//
+//	public Timer() {
+//	  super(Integer.MAX_VALUE, levelChangeTimeLocal / 10);
+//	}
+//
+//	@Override
+//	public void onTick(long millisUntilFinished) {
+//	  levelChangeTimeLocal -= 1;
+//	  marioSpeedLocal += 1;
+//	  enemySpeedLocal += 2;
+//
+////	  gameEventListener.scoreChanged(gameScore += 100);
+//	}
+//
+//	@Override
+//	public void onFinish() {
+//
+//	}
+//  }
 }
 
 
