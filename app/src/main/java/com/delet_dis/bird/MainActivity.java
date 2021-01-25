@@ -37,7 +37,9 @@ public class MainActivity extends AppCompatActivity {
 		runOnUiThread(() -> {
 		  restartButton.setVisibility(View.VISIBLE);
 		  restartButton.setOnClickListener(v -> {
-//		  gameScreen.
+			gameScreen.setupThread(getApplicationContext());
+			restartButton.setVisibility(View.INVISIBLE);
+			gameOverText.setVisibility(View.INVISIBLE);
 		  });
 		  gameOverText.setVisibility(View.VISIBLE);
 		});
