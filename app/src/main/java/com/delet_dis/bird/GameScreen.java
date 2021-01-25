@@ -8,7 +8,6 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.CountDownTimer;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -72,12 +71,12 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 	if (event.getAction() == MotionEvent.ACTION_DOWN) {
 
 	  if (event.getX() < 150f && event.getY() < 150f) {
-		drawingThread.setRunning(false);
+		drawingThread.setPaused(true);
+		drawingThread.gameEventListener.gamePaused();
 	  } else {
-		Log.d("X_COORDINATE", String.valueOf(event.getX()));
-		Log.d("Y_COORDINATE", String.valueOf(event.getY()));
-		drawingThread.setRunning(true);
+		drawingThread.setPaused(false);
 		drawingThread.setGoal(event.getX(), event.getY());
+		drawingThread.gameEventListener.gameResumed();
 	  }
 
 	}
@@ -140,12 +139,13 @@ class DrawingThread extends Thread {
   private float enemyX = generateRandomEnemyStartCoordinates();
   private float enemyY = generateRandomEnemyStartCoordinates();
   private boolean running = true;
+  private boolean paused = false;
   private Canvas canvas;
   private SurfaceHolder surfaceHolder;
   private Context context;
 
-  public void setRunning(boolean running) {
-	this.running = running;
+  public void setPaused(boolean paused) {
+	this.paused = paused;
   }
 
   public void setTimer(GameScreen.Timer timer) {
@@ -242,73 +242,77 @@ class DrawingThread extends Thread {
   @Override
   public void run() {
 
-	while (running) {
-	  canvas = surfaceHolder.lockCanvas();
+	while (true) {
+	  while (running && !paused) {
+		canvas = surfaceHolder.lockCanvas();
 
-	  if (canvas != null) {
+		if (canvas != null) {
 
-		screenX = canvas.getWidth();
-		screenY = canvas.getHeight();
+		  screenX = canvas.getWidth();
+		  screenY = canvas.getHeight();
 
-		canvas.drawColor(Color.WHITE);
+		  canvas.drawColor(Color.WHITE);
 
-		canvas.drawBitmap(mario.getNextMario(context), marioX, marioY, new Paint());
+		  canvas.drawBitmap(mario.getNextMario(context), marioX, marioY, new Paint());
 
-		canvas.drawBitmap(enemy.getNextEnemy(context), enemyX, enemyY, new Paint());
+		  canvas.drawBitmap(enemy.getNextEnemy(context), enemyX, enemyY, new Paint());
 
-		canvas.drawBitmap(bonus.getBonusBitmap(context), bonusX, bonusY, new Paint());
+		  canvas.drawBitmap(bonus.getBonusBitmap(context), bonusX, bonusY, new Paint());
 
-		canvas.drawBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.pause_button), 16, 16, new Paint());
+		  canvas.drawBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.pause_button), 16, 16, new Paint());
 
-		if (marioX < goalX) {
-		  marioX += GameStartingValues.marioSpeed;
-		} else if (marioX > goalX) {
-		  marioX -= GameStartingValues.marioSpeed;
+		  if (marioX < goalX) {
+			marioX += GameStartingValues.marioSpeed;
+		  } else if (marioX > goalX) {
+			marioX -= GameStartingValues.marioSpeed;
+		  }
+		  if (Math.abs(marioX - goalX) < GameStartingValues.marioSpeed) {
+			marioX = goalX;
+		  }
+
+		  if (marioY < goalY) {
+			marioY += GameStartingValues.marioSpeed;
+		  } else if (marioY > goalY) {
+			marioY -= GameStartingValues.marioSpeed;
+		  }
+		  if (Math.abs(marioY - goalY) < GameStartingValues.marioSpeed) {
+			marioY = goalY;
+		  }
+
+		  if (enemyX < marioX) {
+			enemyX += GameStartingValues.enemySpeed;
+		  } else if (marioX < enemyX) {
+			enemyX -= GameStartingValues.enemySpeed;
+		  }
+		  if (Math.abs(marioX - enemyX) < GameStartingValues.enemySpeed) {
+			marioX = enemyX;
+		  }
+
+		  if (enemyY < marioY) {
+			enemyY += GameStartingValues.enemySpeed;
+		  } else if (marioY < enemyY) {
+			enemyY -= GameStartingValues.enemySpeed;
+		  }
+		  if (Math.abs(marioY - enemyY) < GameStartingValues.enemySpeed) {
+			marioY = enemyY;
+		  }
+
+		  if (getRectForMario().intersect(getRectForEnemy())) {
+			stopDrawing();
+		  }
+
+		  if (getRectForMario().intersect(getRectForBonus())) {
+			setGameScore(getGameScore() + 200);
+			bonusX = screenX + 100;
+			bonusY = screenY + 100;
+		  }
+
+		  surfaceHolder.unlockCanvasAndPost(canvas);
 		}
-		if (Math.abs(marioX - goalX) < GameStartingValues.marioSpeed) {
-		  marioX = goalX;
-		}
-
-		if (marioY < goalY) {
-		  marioY += GameStartingValues.marioSpeed;
-		} else if (marioY > goalY) {
-		  marioY -= GameStartingValues.marioSpeed;
-		}
-		if (Math.abs(marioY - goalY) < GameStartingValues.marioSpeed) {
-		  marioY = goalY;
-		}
-
-		if (enemyX < marioX) {
-		  enemyX += GameStartingValues.enemySpeed;
-		} else if (marioX < enemyX) {
-		  enemyX -= GameStartingValues.enemySpeed;
-		}
-		if (Math.abs(marioX - enemyX) < GameStartingValues.enemySpeed) {
-		  marioX = enemyX;
-		}
-
-		if (enemyY < marioY) {
-		  enemyY += GameStartingValues.enemySpeed;
-		} else if (marioY < enemyY) {
-		  enemyY -= GameStartingValues.enemySpeed;
-		}
-		if (Math.abs(marioY - enemyY) < GameStartingValues.enemySpeed) {
-		  marioY = enemyY;
-		}
-
-		if (getRectForMario().intersect(getRectForEnemy())) {
-		  stopDrawing();
-		}
-
-		if (getRectForMario().intersect(getRectForBonus())) {
-		  setGameScore(getGameScore() + 200);
-		  bonusX = screenX + 100;
-		  bonusY = screenY + 100;
-		}
-
-		surfaceHolder.unlockCanvasAndPost(canvas);
 	  }
 	}
+
+
   }
 
   interface GameEventListener {
@@ -317,5 +321,9 @@ class DrawingThread extends Thread {
 	void scoreChanged(int score);
 
 	void throwTimer(GameScreen.Timer timer);
+
+	void gamePaused();
+
+	void gameResumed();
   }
 }
