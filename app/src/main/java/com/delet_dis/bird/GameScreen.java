@@ -1,12 +1,14 @@
 package com.delet_dis.bird;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.CountDownTimer;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -19,14 +21,13 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 
   DrawingThread drawingThread;
   DrawingThread.GameEventListener listener;
-
   Timer timer;
+
 
   public GameScreen(Context context) {
 	super(context);
 	getHolder().addCallback(this);
   }
-
 
   public GameScreen(Context context, @Nullable AttributeSet attrs) {
 	super(context, attrs);
@@ -48,7 +49,9 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 	drawingThread.setContext(context);
 	drawingThread.start();
 	drawingThread.gameEventListener = listener;
-//	timer.start();
+	timer = new Timer();
+	drawingThread.setTimer(timer);
+	timer.start();
   }
 
   @Override
@@ -67,7 +70,16 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
   @Override
   public boolean onTouchEvent(MotionEvent event) {
 	if (event.getAction() == MotionEvent.ACTION_DOWN) {
-	  drawingThread.setGoal(event.getX(), event.getY());
+
+	  if (event.getX() < 150f && event.getY() < 150f) {
+		drawingThread.setRunning(false);
+	  } else {
+		Log.d("X_COORDINATE", String.valueOf(event.getX()));
+		Log.d("Y_COORDINATE", String.valueOf(event.getY()));
+		drawingThread.setRunning(true);
+		drawingThread.setGoal(event.getX(), event.getY());
+	  }
+
 	}
 
 	performClick();
@@ -79,9 +91,6 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 	return super.performClick();
   }
 
-  public void setGameEventListener(DrawingThread.GameEventListener listener) {
-	drawingThread.gameEventListener = listener;
-  }
 
   class Timer extends CountDownTimer {
 
@@ -94,6 +103,8 @@ public class GameScreen extends SurfaceView implements SurfaceHolder.Callback {
 	  drawingThread.setLevelChangeTimeLocal(drawingThread.getLevelChangeTimeLocal() - 1);
 	  drawingThread.setMarioSpeedLocal(drawingThread.getMarioSpeedLocal() + 1);
 	  drawingThread.setEnemySpeedLocal(drawingThread.getEnemySpeedLocal() + 2);
+
+	  drawingThread.updateBonusCoordinates();
 
 	  drawingThread.setGameScore(drawingThread.getGameScore() + 100);
 	}
@@ -117,20 +128,33 @@ class DrawingThread extends Thread {
   int enemySpeedLocal = GameStartingValues.enemySpeed;
   int levelChangeTimeLocal = GameStartingValues.levelChangeTime;
   int gameScore = 0;
-  private float bonusX;
-  private float bonusY;
+  GameScreen.Timer timer;
   private float marioX = 0;
   private float marioY = 0;
   private float goalX = 0;
   private float goalY = 0;
   private float screenX;
+  private float bonusX = generateRandomBonusCoordinatesX();
   private float screenY;
+  private float bonusY = generateRandomBonusCoordinatesY();
   private float enemyX = generateRandomEnemyStartCoordinates();
   private float enemyY = generateRandomEnemyStartCoordinates();
   private boolean running = true;
   private Canvas canvas;
   private SurfaceHolder surfaceHolder;
   private Context context;
+
+  public void setRunning(boolean running) {
+	this.running = running;
+  }
+
+  public void setTimer(GameScreen.Timer timer) {
+	this.timer = timer;
+  }
+
+  public Canvas getCanvas() {
+	return canvas;
+  }
 
   public int getMarioSpeedLocal() {
 	return marioSpeedLocal;
@@ -162,8 +186,10 @@ class DrawingThread extends Thread {
 
   public void setGameScore(int gameScore) {
 	this.gameScore = gameScore;
-	setGameScore(gameScore);
+	gameEventListener.scoreChanged(gameScore);
+	gameEventListener.throwTimer(timer);
   }
+
 
   public void setGoal(float goalX, float goalY) {
 	this.goalX = goalX;
@@ -203,14 +229,14 @@ class DrawingThread extends Thread {
 	return new Rect((int) enemyX, (int) enemyY, (int) enemyX + 150, (int) enemyY + 150);
   }
 
-  private void drawBonus() {
-	canvas.drawBitmap(bonus.getBonusBitmap(context), generateRandomBonusCoordinatesX(), generateRandomBonusCoordinatesY(), new Paint());
+  public void updateBonusCoordinates() {
+	bonusX = generateRandomBonusCoordinatesX();
+	bonusY = generateRandomBonusCoordinatesY();
   }
 
-//  public Rect getRectForBonus() {
-//
-//	return new Rect(( int ))
-//  }
+  public Rect getRectForBonus() {
+	return new Rect((int) bonusX, (int) bonusY, (int) bonusX + 100, (int) bonusY + 100);
+  }
 
 
   @Override
@@ -230,8 +256,9 @@ class DrawingThread extends Thread {
 
 		canvas.drawBitmap(enemy.getNextEnemy(context), enemyX, enemyY, new Paint());
 
-		canvas.drawBitmap(bonus.getBonusBitmap(context), 900, 900, new Paint());
+		canvas.drawBitmap(bonus.getBonusBitmap(context), bonusX, bonusY, new Paint());
 
+		canvas.drawBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.pause_button), 16, 16, new Paint());
 
 		if (marioX < goalX) {
 		  marioX += GameStartingValues.marioSpeed;
@@ -273,6 +300,11 @@ class DrawingThread extends Thread {
 		  stopDrawing();
 		}
 
+		if (getRectForMario().intersect(getRectForBonus())) {
+		  setGameScore(getGameScore() + 200);
+		  bonusX = screenX + 100;
+		  bonusY = screenY + 100;
+		}
 
 		surfaceHolder.unlockCanvasAndPost(canvas);
 	  }
@@ -283,9 +315,7 @@ class DrawingThread extends Thread {
 	void gameStopped();
 
 	void scoreChanged(int score);
+
+	void throwTimer(GameScreen.Timer timer);
   }
 }
-
-
-
-
